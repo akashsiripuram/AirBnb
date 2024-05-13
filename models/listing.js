@@ -1,38 +1,50 @@
-const mongoose=require('mongoose');
-const Review=require('./review');
-const Schema=mongoose.Schema;
+const mongoose = require('mongoose');
+const Review = require('./review');
+const { required } = require('joi');
+const Schema = mongoose.Schema;
 
-const listingSchema=new Schema({
-    title:{
-        type:String,
-        required:true,
+const listingSchema = new Schema({
+    title: {
+        type: String,
+        required: true,
     },
-    description:{
-        type:String,
+    description: {
+        type: String,
 
     },
-    image:{
-        type:String,
-        default:"https://images.unsplash.com/photo-1682685797366-715d29e33f9d?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-        set:(v)=> v===""?"https://images.unsplash.com/photo-1682685797366-715d29e33f9d?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D":v,
+    image: {
+        url: String,
+        filename: String,
     },
-    price:Number,
-    location:String,
-    country:String,
-    reviews:[
+    price: Number,
+    location: String,
+    country: String,
+    reviews: [
         {
-            type:Schema.Types.ObjectId,
-            ref:"Review"
+            type: Schema.Types.ObjectId,
+            ref: "Review"
         },
     ],
-    owner:{
-        type:Schema.Types.ObjectId,
-        ref:"User"
-    }
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
+    geometry: {
+        type: {
+            type: String, // Don't do `{ location: { type: String } }`
+            enum: ['Point'], // 'location.type' must be 'Point'
+            required: true
+        },
+        coordinates: {
+            type: [Number],
+            required: true
+        }
+    },
+
 });
-listingSchema.post("findOneAndDelete",async (listing)=>{
-    if(listing)
-    await Review.deleteMany({_id:{$in:listing.reviews}})
+listingSchema.post("findOneAndDelete", async (listing) => {
+    if (listing)
+        await Review.deleteMany({ _id: { $in: listing.reviews } })
 })
-const Listing=mongoose.model("Listing",listingSchema);
-module.exports=Listing;
+const Listing = mongoose.model("Listing", listingSchema);
+module.exports = Listing;
